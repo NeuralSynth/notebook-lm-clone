@@ -24,7 +24,7 @@
 }
 
 .emptyTitle {
-  font-family: var(--font-display);
+  font-family: var(--font-display), sans-serif;
   font-size: 18px;
   color: var(--text-primary);
 }
@@ -32,7 +32,7 @@
 .emptySub {
   font-size: 12px;
   color: var(--text-muted);
-  font-family: var(--font-mono);
+  font-family: var(--font-mono), sans-serif;
 }
 
 .msg {
@@ -84,7 +84,7 @@
 
 .role {
   font-size: 10px;
-  font-family: var(--font-mono);
+  font-family: var(--font-mono), sans-serif;
   color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 0.08em;
@@ -129,10 +129,10 @@
 .input {
   flex: 1;
   resize: none;
-  border: 1.5px solid var(--paper-3);
+  border: 2px solid var(--paper-3);
   border-radius: var(--radius);
   padding: 10px 14px;
-  font-family: var(--font-body);
+  font-family: var(--font-body), sans-serif;
   font-size: 14px;
   background: var(--paper-2);
   color: var(--text-primary);

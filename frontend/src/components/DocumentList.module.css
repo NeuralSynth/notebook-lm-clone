@@ -1,7 +1,7 @@
 .empty {
   font-size: 12px;
   color: var(--text-muted);
-  font-family: var(--font-mono);
+  font-family: var(--font-mono), sans-serif;
   padding: 8px 0;
   text-align: center;
 }
@@ -53,7 +53,7 @@
 .meta {
   font-size: 10px;
   color: var(--text-muted);
-  font-family: var(--font-mono);
+  font-family: var(--font-mono), sans-serif;
 }
 
 .del {

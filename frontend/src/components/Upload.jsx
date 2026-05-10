@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react'
-import { Upload, FileText, Loader2 } from 'lucide-react'
+import { Upload, Loader2 } from 'lucide-react'
 import { uploadDocument } from '../api'
 import styles from './Upload.module.css'
 
@@ -10,6 +10,8 @@ export default function UploadZone({ onUploaded }) {
   const inputRef = useRef(null)
 
   async function handleFile(file) {
+    if (uploading) return
+    
     setError(null)
     setUploading(true)
     try {
@@ -26,12 +28,12 @@ export default function UploadZone({ onUploaded }) {
     e.preventDefault()
     setDragging(false)
     const file = e.dataTransfer.files[0]
-    if (file) handleFile(file)
+    if (file) handleFile(file).catch(console.error)
   }
 
   function onInputChange(e) {
     const file = e.target.files[0]
-    if (file) handleFile(file)
+    if (file) handleFile(file).catch(console.error)
     e.target.value = ''
   }
 

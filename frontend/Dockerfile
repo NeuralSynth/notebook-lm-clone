@@ -12,7 +12,7 @@ FROM nginx:alpine
 
 COPY --from=builder /app/dist /usr/share/nginx/html
 
-# Nginx config to handle SPA routing
+# Nginx config to handle SPA routing + API proxy with SSE support
 RUN echo 'server { \
   listen 80; \
   root /usr/share/nginx/html; \
@@ -21,7 +21,14 @@ RUN echo 'server { \
     proxy_pass http://backend:8000; \
     proxy_set_header Host $host; \
     proxy_set_header X-Real-IP $remote_addr; \
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for; \
     proxy_buffering off; \
+    proxy_http_version 1.1; \
+    proxy_set_header Connection ""; \
+    chunked_transfer_encoding off; \
+    proxy_read_timeout 300s; \
+    proxy_connect_timeout 300s; \
+    proxy_send_timeout 300s; \
   } \
   location / { \
     try_files $uri $uri/ /index.html; \

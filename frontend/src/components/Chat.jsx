@@ -42,35 +42,46 @@ export default function Chat({ hasDocuments }) {
     setMessages(prev => [...prev, userMsg, assistantMsg])
     setStreaming(true)
 
-    await streamChat({
-      query,
-      onChunk: (text) => {
-        setMessages(prev =>
-          prev.map(m =>
-            m.id === assistantMsg.id
-              ? { ...m, content: m.content + text }
-              : m
+    try {
+      await streamChat({
+        query,
+        onChunk: (text) => {
+          setMessages(prev =>
+            prev.map(m =>
+              m.id === assistantMsg.id
+                ? { ...m, content: m.content + text }
+                : m
+            )
           )
-        )
-      },
-      onDone: () => setStreaming(false),
-      onError: (err) => {
-        setMessages(prev =>
-          prev.map(m =>
-            m.id === assistantMsg.id
-              ? { ...m, content: `Error: ${err}` }
-              : m
+        },
+        onDone: () => setStreaming(false),
+        onError: (err) => {
+          setMessages(prev =>
+            prev.map(m =>
+              m.id === assistantMsg.id
+                ? { ...m, content: `Error: ${err}` }
+                : m
+            )
           )
+          setStreaming(false)
+        },
+      })
+    } catch (err) {
+      setMessages(prev =>
+        prev.map(m =>
+          m.id === assistantMsg.id
+            ? { ...m, content: `Error: ${err.message}` }
+            : m
         )
-        setStreaming(false)
-      },
-    })
+      )
+      setStreaming(false)
+    }
   }
 
   function onKeyDown(e) {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault()
-      send()
+      send().catch(console.error)
     }
   }
 
@@ -100,7 +111,7 @@ export default function Chat({ hasDocuments }) {
         />
         <button
           className={styles.send}
-          onClick={send}
+          onClick={() => send().catch(console.error)}
           disabled={!hasDocuments || streaming || !input.trim()}
         >
           {streaming
