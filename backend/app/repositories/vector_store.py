@@ -9,7 +9,7 @@ import logging
 import uuid
 from typing import List
 
-from qdrant_client import QdrantClient
+from qdrant_client import AsyncQdrantClient
 from qdrant_client.models import (
     Distance,
     VectorParams,
@@ -18,6 +18,7 @@ from qdrant_client.models import (
     FieldCondition,
     MatchValue,
     MatchAny,
+    PayloadSchemaType,
 )
 
 from app.config import Settings
@@ -37,16 +38,17 @@ class VectorStoreRepository:
         delete_by_doc_id()  — remove all chunks for a document
     """
 
-    def __init__(self, client: QdrantClient, settings: Settings):
+    def __init__(self, client: AsyncQdrantClient, settings: Settings):
         self._client = client
         self._collection = settings.COLLECTION_NAME
         self._vector_dim = settings.VECTOR_DIM
 
-    def ensure_collection(self) -> None:
+    async def ensure_collection(self) -> None:
         """Create the Qdrant collection if it doesn't already exist."""
-        existing = [c.name for c in self._client.get_collections().collections]
+        collections_response = await self._client.get_collections()
+        existing = [c.name for c in collections_response.collections]
         if self._collection not in existing:
-            self._client.create_collection(
+            await self._client.create_collection(
                 collection_name=self._collection,
                 vectors_config=VectorParams(
                     size=self._vector_dim,
@@ -57,7 +59,15 @@ class VectorStoreRepository:
         else:
             logger.info("Qdrant collection already exists: %s", self._collection)
 
-    def upsert_chunks(
+        # Always ensure doc_id index exists (required for deletion filters)
+        await self._client.create_payload_index(
+            collection_name=self._collection,
+            field_name="doc_id",
+            field_schema=PayloadSchemaType.KEYWORD,
+        )
+        logger.info("Ensured payload index on 'doc_id' for collection: %s", self._collection)
+
+    async def upsert_chunks(
         self,
         chunks: List[Chunk],
         embeddings: List[List[float]],
@@ -77,10 +87,10 @@ class VectorStoreRepository:
             )
             for chunk, vector in zip(chunks, embeddings)
         ]
-        self._client.upsert(collection_name=self._collection, points=points)
+        await self._client.upsert(collection_name=self._collection, points=points)
         logger.info("Upserted %d chunks to collection '%s'", len(points), self._collection)
 
-    def search(
+    async def search(
         self,
         query_vector: List[float],
         top_k: int,
@@ -96,7 +106,7 @@ class VectorStoreRepository:
                 must=[FieldCondition(key="doc_id", match=MatchAny(any=doc_ids))]
             )
 
-        results = self._client.search(
+        results = await self._client.search(
             collection_name=self._collection,
             query_vector=query_vector,
             limit=top_k,
@@ -114,9 +124,9 @@ class VectorStoreRepository:
             for r in results
         ]
 
-    def delete_by_doc_id(self, doc_id: str) -> None:
+    async def delete_by_doc_id(self, doc_id: str) -> None:
         """Delete all chunks belonging to a specific document."""
-        self._client.delete(
+        await self._client.delete(
             collection_name=self._collection,
             points_selector=Filter(
                 must=[FieldCondition(key="doc_id", match=MatchValue(value=doc_id))]

@@ -8,7 +8,7 @@ Depends on unified OpenAI SDK (embedding and generation) and VectorStoreReposito
 import logging
 from typing import AsyncGenerator, List
 
-from openai import OpenAI
+from openai import AsyncOpenAI
 
 from app.config import Settings
 from app.repositories.vector_store import VectorStoreRepository
@@ -40,7 +40,7 @@ class QueryService:
 
     def __init__(
         self,
-        openai_client: OpenAI,
+        openai_client: AsyncOpenAI,
         vector_store: VectorStoreRepository,
         settings: Settings,
     ):
@@ -59,8 +59,8 @@ class QueryService:
         Full RAG query pipeline with streaming response.
         Yields text chunks as they stream from Gemini.
         """
-        query_vector = self._embed_query(query)
-        chunks = self._vector_store.search(
+        query_vector = await self._embed_query(query)
+        chunks = await self._vector_store.search(
             query_vector,
             top_k=self._settings.TOP_K,
             doc_ids=doc_ids,
@@ -73,7 +73,7 @@ class QueryService:
         context = self._build_context(chunks)
         system = SYSTEM_PROMPT.format(context=context)
 
-        response = self._openai.chat.completions.create(
+        response = await self._openai.chat.completions.create(
             model=self._settings.LLM_MODEL,
             messages=[
                 {"role": "system", "content": system},
@@ -82,15 +82,15 @@ class QueryService:
             stream=True
         )
 
-        for chunk in response:
+        async for chunk in response:
             if chunk.choices and chunk.choices[0].delta.content:
                 yield chunk.choices[0].delta.content
 
     # ── Private Helpers ───────────────────────────────────────────────
 
-    def _embed_query(self, query: str) -> List[float]:
+    async def _embed_query(self, query: str) -> List[float]:
         """Embed a single query string using OpenAI."""
-        response = self._openai.embeddings.create(
+        response = await self._openai.embeddings.create(
             model=self._settings.EMBEDDING_MODEL,
             input=[query],
         )

@@ -10,7 +10,7 @@ import uuid
 from typing import List
 
 import pymupdf  # PyMuPDF
-from openai import OpenAI
+from openai import AsyncOpenAI
 
 from app.config import Settings
 from app.repositories.vector_store import VectorStoreRepository
@@ -31,7 +31,7 @@ class IngestService:
 
     def __init__(
         self,
-        openai_client: OpenAI,
+        openai_client: AsyncOpenAI,
         vector_store: VectorStoreRepository,
         settings: Settings,
     ):
@@ -41,12 +41,12 @@ class IngestService:
 
     # ── Public API ────────────────────────────────────────────────────
 
-    def ingest_file(self, file_bytes: bytes, filename: str) -> dict:
+    async def ingest_file(self, file_bytes: bytes, filename: str) -> dict:
         """
         Full ingestion pipeline for a single file.
         Returns document metadata dict.
         """
-        self._vector_store.ensure_collection()
+        await self._vector_store.ensure_collection()
 
         doc_id = str(uuid.uuid4())
         ext = filename.lower().rsplit(".", 1)[-1]
@@ -63,8 +63,8 @@ class IngestService:
             raise EmptyDocumentError("No extractable text found in document.")
 
         try:
-            embeddings = self._embed_chunks(chunks)
-            self._vector_store.upsert_chunks(chunks, embeddings)
+            embeddings = await self._embed_chunks(chunks)
+            await self._vector_store.upsert_chunks(chunks, embeddings)
         except Exception as e:
             logger.error("Ingestion pipeline failed for %s: %s", filename, e)
             raise IngestionError(str(e)) from e
@@ -81,9 +81,10 @@ class IngestService:
             "pages": len(pages),
         }
 
-    def delete_document(self, doc_id: str) -> None:
+    async def delete_document(self, doc_id: str) -> None:
         """Delete all chunks belonging to a document from the vector store."""
-        self._vector_store.delete_by_doc_id(doc_id)
+        await self._vector_store.ensure_collection()
+        await self._vector_store.delete_by_doc_id(doc_id)
 
     # ── Private Helpers ───────────────────────────────────────────────
 
@@ -114,7 +115,7 @@ class IngestService:
         text = file_bytes.decode("utf-8", errors="ignore")
         return [{"page": None, "text": text}]
 
-    def _embed_chunks(self, chunks: List[Chunk]) -> List[List[float]]:
+    async def _embed_chunks(self, chunks: List[Chunk]) -> List[List[float]]:
         """Batch embed chunk texts using OpenAI embeddings."""
         texts = [c.text for c in chunks]
         batch_size = self._settings.EMBEDDING_BATCH_SIZE
@@ -122,7 +123,7 @@ class IngestService:
 
         for i in range(0, len(texts), batch_size):
             batch = texts[i : i + batch_size]
-            response = self._openai.embeddings.create(
+            response = await self._openai.embeddings.create(
                 model=self._settings.EMBEDDING_MODEL,
                 input=batch,
             )

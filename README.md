@@ -48,6 +48,15 @@ See `backend/app/services/chunker.py` for full documentation.
 | **Singleton (Lifespan)** | `app/clients.py` + app lifespan | Clients created once, shared across requests |
 | **App Factory** | `app/main.py` → `create_app()` | Configurable app creation |
 
+## Recent Enhancements
+
+### Robust Deletion Workflow
+To ensure a stable and transparent document management experience, the deletion process has been hardened:
+- **Qdrant Payload Indexing**: Automatically ensures a `doc_id` keyword index exists in Qdrant, preventing "Index required" errors during filtered deletions.
+- **Enhanced UI Feedback**: The `DocumentList` component now features real-time deletion feedback with loading spinners and error state indicators.
+- **Detailed Error Propagation**: Backend errors are now parsed and surfaced to the UI, providing actionable feedback (e.g., when a vector store operation fails).
+- **Backend Traceability**: Instrumented deletion routes with structured logging to track request lifecycle and catch synchronization mismatches.
+
 ## Local Setup
 
 ### Prerequisites

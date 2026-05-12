@@ -58,6 +58,7 @@ async def lifespan(app: FastAPI):
 
     # Initialize repository
     vector_store = VectorStoreRepository(clients.qdrant, settings)
+    await vector_store.ensure_collection()
 
     # Initialize services
     ingest_service = IngestService(clients.openai, vector_store, settings)
@@ -73,7 +74,7 @@ async def lifespan(app: FastAPI):
 
     # Shutdown
     logger.info("Shutting down…")
-    clients.close()
+    await clients.close()
 
 
 def create_app() -> FastAPI:

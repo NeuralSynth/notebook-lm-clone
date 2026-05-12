@@ -1,4 +1,5 @@
-import { Trash2, FileText, File } from 'lucide-react'
+import { useState } from 'react'
+import { Trash2, FileText, File, Loader2, AlertCircle } from 'lucide-react'
 import { deleteDocument } from '../api'
 import styles from './DocumentList.module.css'
 
@@ -8,12 +9,21 @@ function fileIcon(filename) {
 }
 
 export default function DocumentList({ documents, onDeleted }) {
+  const [deletingId, setDeletingId] = useState(null)
+  const [error, setError] = useState(null)
+
   async function handleDelete(docId) {
+    if (deletingId) return
+    setError(null)
+    setDeletingId(docId)
     try {
       await deleteDocument(docId)
       onDeleted(docId)
     } catch (e) {
       console.error(e)
+      setError({ id: docId, message: e.message })
+    } finally {
+      setDeletingId(null)
     }
   }
 
@@ -35,11 +45,18 @@ export default function DocumentList({ documents, onDeleted }) {
             <span className={styles.meta}>{doc.chunks} chunks · {doc.pages} pages</span>
           </div>
           <button
-            className={styles.del}
+            className={`${styles.del} ${deletingId === doc.doc_id ? styles.deleting : ''}`}
             onClick={() => handleDelete(doc.doc_id)}
-            title="Remove document"
+            title={error?.id === doc.doc_id ? error.message : "Remove document"}
+            disabled={deletingId === doc.doc_id}
           >
-            <Trash2 size={13} />
+            {deletingId === doc.doc_id ? (
+              <Loader2 size={13} className={styles.spinner} />
+            ) : error?.id === doc.doc_id ? (
+              <AlertCircle size={13} className={styles.errIcon} />
+            ) : (
+              <Trash2 size={13} />
+            )}
           </button>
         </li>
       ))}

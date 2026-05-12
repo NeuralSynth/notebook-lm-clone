@@ -83,8 +83,8 @@ def chunk_text(
             ))
             chunk_index += 1
 
-        # Move start forward by (chunk_size - chunk_overlap)
-        start += chunk_size - chunk_overlap
+        # Move start forward to maintain overlap from the actual end
+        start = max(start + 1, end - chunk_overlap)
 
     return chunks
 

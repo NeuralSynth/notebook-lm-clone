@@ -6,8 +6,8 @@ at application startup and shared across the entire app lifecycle.
 """
 
 import logging
-from openai import OpenAI
-from qdrant_client import QdrantClient
+from openai import AsyncOpenAI
+from qdrant_client import AsyncQdrantClient
 
 from app.config import Settings
 
@@ -25,13 +25,13 @@ class ClientManager:
     def __init__(self, settings: Settings):
         logger.info("Initializing external clients…")
 
-        self.openai = OpenAI(
+        self.openai = AsyncOpenAI(
             api_key=settings.API_KEY,
             base_url=settings.API_BASE_URL,
         )
         logger.info("  ✓ API client ready (%s)", settings.API_BASE_URL)
 
-        self.qdrant = QdrantClient(
+        self.qdrant = AsyncQdrantClient(
             url=settings.QDRANT_URL,
             api_key=settings.QDRANT_API_KEY,
         )
@@ -40,10 +40,11 @@ class ClientManager:
         self.llm_model_name = settings.LLM_MODEL
         logger.info("  ✓ LLM configured (model: %s)", settings.LLM_MODEL)
 
-    def close(self):
+    async def close(self):
         """Gracefully close clients that support it."""
         try:
-            self.qdrant.close()
-            logger.info("Qdrant client closed.")
+            await self.qdrant.close()
+            await self.openai.close()
+            logger.info("Clients closed.")
         except Exception:
             pass

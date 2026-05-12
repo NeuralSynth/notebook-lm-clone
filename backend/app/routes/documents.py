@@ -42,7 +42,7 @@ async def upload_document(
         raise FileTooLargeError(len(file_bytes), settings.MAX_FILE_SIZE)
 
     try:
-        meta = ingest_service.ingest_file(file_bytes, filename=file.filename)
+        meta = await ingest_service.ingest_file(file_bytes, filename=file.filename)
     except (ValueError, Exception) as e:
         raise IngestionError(str(e)) from e
 
@@ -65,13 +65,18 @@ async def remove_document(
     doc_store: dict = Depends(get_document_store),
 ):
     """Remove a document and its chunks from the vector store."""
+    logger.info("Delete request received for doc_id: %s", doc_id)
     if doc_id not in doc_store:
+        logger.warning("Document not found in store: %s", doc_id)
         raise DocumentNotFoundError(doc_id)
 
     try:
-        ingest_service.delete_document(doc_id)
+        await ingest_service.delete_document(doc_id)
+        logger.info("Successfully deleted chunks for doc_id: %s", doc_id)
     except Exception as e:
+        logger.error("Failed to delete document %s: %s", doc_id, e)
         raise IngestionError(str(e)) from e
 
     del doc_store[doc_id]
+    logger.info("Removed doc_id %s from memory store.", doc_id)
     return DeleteResponse(deleted=doc_id)
