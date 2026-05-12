@@ -188,3 +188,18 @@
 @keyframes spin {
   to { transform: rotate(360deg); }
 }
+
+/* ── Responsive ──────────────────────────────── */
+@media (max-width: 768px) {
+  .bubble {
+    max-width: 90%;
+  }
+  
+  .inputRow {
+    padding: 12px 16px;
+  }
+  
+  .messages {
+    padding: 16px 12px;
+  }
+}

@@ -20,7 +20,10 @@ export async function listDocuments() {
 
 export async function deleteDocument(docId) {
   const res = await fetch(`${BASE}/api/documents/${docId}`, { method: 'DELETE' })
-  if (!res.ok) throw new Error('Failed to delete document')
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ detail: 'Failed to delete document' }))
+    throw new Error(err.detail || 'Failed to delete document')
+  }
   return res.json()
 }
 
