@@ -48,6 +48,8 @@ class Settings(BaseSettings):
     # ── RAG ───────────────────────────────────────────────────────────
     TOP_K: int = 6               # chunks to retrieve per query
     LLM_MODEL: str = "gemini-1.5-flash"
+    ENABLE_CRAG: bool = True     # enable corrective RAG grading/fallback
+    MAX_REWRITE_ATTEMPTS: int = 1 # query rewriting limit
 
     # ── Upload ────────────────────────────────────────────────────────
     MAX_FILE_SIZE: int = 20 * 1024 * 1024  # 20 MB

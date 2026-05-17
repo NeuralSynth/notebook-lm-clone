@@ -39,14 +39,14 @@ See `backend/app/services/chunker.py` for full documentation.
 
 ## Architecture & Design Patterns
 
-| Pattern | Implementation | Purpose |
-|---------|---------------|---------|
-| **Settings Pattern** | `app/config.py` | Centralized, validated config via `pydantic-settings` |
-| **Repository Pattern** | `app/repositories/vector_store.py` | Abstracts Qdrant operations behind a clean interface |
-| **Service Layer** | `app/services/ingest.py`, `query.py` | Business logic separated from HTTP handlers |
-| **Dependency Injection** | `app/dependencies.py` + FastAPI `Depends()` | Loose coupling, testability |
-| **Singleton (Lifespan)** | `app/clients.py` + app lifespan | Clients created once, shared across requests |
-| **App Factory** | `app/main.py` → `create_app()` | Configurable app creation |
+| Pattern                  | Implementation                              | Purpose                                               |
+|--------------------------|---------------------------------------------|-------------------------------------------------------|
+| **Settings Pattern**     | `app/config.py`                             | Centralized, validated config via `pydantic-settings` |
+| **Repository Pattern**   | `app/repositories/vector_store.py`          | Abstracts Qdrant operations behind a clean interface  |
+| **Service Layer**        | `app/services/ingest.py`, `query.py`        | Business logic separated from HTTP handlers           |
+| **Dependency Injection** | `app/dependencies.py` + FastAPI `Depends()` | Loose coupling, testability                           |
+| **Singleton (Lifespan)** | `app/clients.py` + app lifespan             | Clients created once, shared across requests          |
+| **App Factory**          | `app/main.py` → `create_app()`              | Configurable app creation                             |
 
 ## Recent Enhancements
 
